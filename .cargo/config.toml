@@ -1,0 +1,11 @@
+# Cargo configuration for curvine-kube
+
+[alias]
+# xtask shortcuts
+xtask = "run --package xtask --"
+x = "xtask"
+
+# Common tasks
+build-release = "build --release"
+test-all = "test --all"
+check-all = "check --all"

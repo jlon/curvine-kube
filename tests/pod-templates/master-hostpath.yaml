@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: master-template
+spec:
+  volumes:
+    # Use a new volume name (not meta-data or journal-data) to avoid mountPath validation
+    - name: hostpath-extra
+      hostPath:
+        path: /tmp/curvine-master-extra
+        type: DirectoryOrCreate
+  containers:
+    - name: cv-master
+      volumeMounts:
+        # This is a new volume, so mountPath can be anything
+        - name: hostpath-extra
+          mountPath: /host-extra-data
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+        limits:
+          cpu: "2.0"
+          memory: "4Gi"
+

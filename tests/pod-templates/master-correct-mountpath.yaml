@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: master-template-correct
+spec:
+  volumes:
+    - name: meta-data
+      hostPath:
+        path: /tmp/curvine-meta
+        type: DirectoryOrCreate
+    - name: journal-data
+      hostPath:
+        path: /tmp/curvine-journal
+        type: DirectoryOrCreate
+  containers:
+    - name: cv-master
+      volumeMounts:
+        # These mountPaths are CORRECT - match config: testing/meta -> /app/curvine/testing/meta
+        - name: meta-data
+          mountPath: /app/curvine/testing/meta
+        - name: journal-data
+          mountPath: /app/curvine/testing/journal
+

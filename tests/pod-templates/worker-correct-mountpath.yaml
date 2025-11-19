@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: worker-template-correct
+spec:
+  volumes:
+    - name: data-dir-0
+      hostPath:
+        path: /tmp/curvine-data
+        type: DirectoryOrCreate
+  containers:
+    - name: cv-worker
+      volumeMounts:
+        # This mountPath is CORRECT - matches config: [MEM:100MB]/data/mem -> /data/mem
+        - name: data-dir-0
+          mountPath: /data/mem
+

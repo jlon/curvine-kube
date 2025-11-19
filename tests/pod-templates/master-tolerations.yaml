@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: master-template
+spec:
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+  containers:
+    - name: cv-master
+      resources:
+        requests:
+          cpu: "1.0"
+          memory: "2Gi"
+        limits:
+          cpu: "2.0"
+          memory: "4Gi"
+

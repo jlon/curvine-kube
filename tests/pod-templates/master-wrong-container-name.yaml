@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: master-template-wrong-name
+spec:
+  volumes:
+    - name: meta-data
+      hostPath:
+        path: /tmp/curvine-meta
+        type: DirectoryOrCreate
+  containers:
+    - name: master  # WRONG - should be cv-master
+      volumeMounts:
+        - name: meta-data
+          mountPath: /app/curvine/testing/meta
+

@@ -1,0 +1,83 @@
+[package]
+name = "curvine-kube"
+version = "0.2.1-beta"
+edition = "2021"
+license = "Apache-2.0"
+description = "A CLI tool for deploying and managing Curvine clusters on Kubernetes"
+authors = ["Curvine Team"]
+homepage = "https://github.com/jlon/curvine-kube"
+repository = "https://github.com/jlon/curvine-kube"
+
+[[bin]]
+name = "curvine-kube"
+path = "src/main.rs"
+
+[lib]
+name = "curvine_kube"
+path = "src/lib.rs"
+
+[dependencies]
+# Kubernetes
+kube = { version = "0.95.0", default-features = false, features = ["runtime", "client", "openssl-tls"] }
+k8s-openapi = { version = "0.23.0", default-features = false, features = ["v1_30"] }
+
+# Async runtime
+tokio = { version = "1.42.0", features = ["full"] }
+futures = "0.3"
+
+# Serialization
+serde = { version = "1.0.215", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1.0.125"
+toml = "0.8.11"
+
+# CLI
+clap = { version = "4.3.10", features = ["derive"] }
+
+# Error handling
+anyhow = "1.0.97"
+thiserror = "1.0.58"
+
+# Retry
+backon = "0.5"
+
+# Logging
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+
+# Utility
+async-trait = "0.1.76"
+regex = "1.9.4"
+
+[dev-dependencies]
+tempfile = "3.21.0"
+
+[workspace]
+members = [".", "xtask"]
+
+# Release profile optimizations (inspired by zellij)
+[profile.release]
+lto = true              # Link-time optimization
+strip = true            # Strip symbols
+codegen-units = 1       # Better optimization at cost of compile time
+opt-level = 3           # Maximum optimization
+
+# Development profile with optimized dependencies
+[profile.dev.package."*"]
+opt-level = 2           # Optimize dependencies in dev mode
+
+# Metadata for Debian packages
+[package.metadata.deb]
+depends = "$auto"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/curvine-kube", "usr/bin/curvine-kube", "755"],
+    ["README.md", "usr/share/doc/curvine-kube/README.md", "644"],
+]
+
+# Metadata for cargo-binstall
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/v{ version }/curvine-kube-{ target }.tar.gz"
+bin-dir = "{ bin }{ binary-ext }"
+pkg-fmt = "tgz"
