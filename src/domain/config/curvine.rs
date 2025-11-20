@@ -98,11 +98,12 @@ pub struct RaftPeer {
 // Storage types
 // ============================================================================
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum StorageType {
     #[serde(rename = "mem")]
     Mem,
     #[serde(rename = "ssd")]
+    #[default]
     Ssd,
     #[serde(rename = "hdd")]
     Hdd,
@@ -110,12 +111,6 @@ pub enum StorageType {
     Disk,
     #[serde(rename = "ufs")]
     Ufs,
-}
-
-impl Default for StorageType {
-    fn default() -> Self {
-        Self::Ssd
-    }
 }
 
 impl StorageType {
