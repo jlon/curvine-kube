@@ -22,15 +22,15 @@ pub mod shared;
 pub use domain::cluster::{CurvineClusterDescriptor, KubernetesValidator};
 pub use domain::config::{
     ClusterConf, KubernetesConfig, MasterConfig, ServiceConfig, ServiceType, StorageConfig,
-    WorkerConfig, StorageType, WorkerDataDir,
+    StorageType, WorkerConfig, WorkerDataDir,
 };
 pub use infrastructure::kubernetes::{CurvineKubeClient, CurvineKubeClientImpl};
 pub use shared::{KubeError, Result};
 
 // Re-export builders for internal use
 #[doc(hidden)]
+pub use domain::config::KubernetesConfigBuilder;
+#[doc(hidden)]
 pub use infrastructure::kubernetes::resources::{
     ConfigMapBuilder, HeadlessServiceBuilder, MasterBuilder, ServiceBuilder, WorkerBuilder,
 };
-#[doc(hidden)]
-pub use domain::config::KubernetesConfigBuilder;

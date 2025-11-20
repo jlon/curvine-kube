@@ -1,11 +1,11 @@
 //! Kubernetes deployment commands
 
-use clap::Parser;
 use crate::domain::config::ClusterConf;
 use crate::{
     CurvineClusterDescriptor, KubernetesConfig, MasterConfig, ServiceConfig, ServiceType,
     StorageConfig, WorkerConfig,
 };
+use clap::Parser;
 use std::collections::HashMap;
 
 #[derive(Parser, Debug, Clone)]

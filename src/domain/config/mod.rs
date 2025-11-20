@@ -20,9 +20,10 @@ pub mod kubernetes;
 
 // Re-export Curvine configuration types
 pub use self::curvine::{
-    ClusterConf, ClientConf, FuseConf, InetAddr, JobConf, JournalConf, KubernetesConf,
-    KubernetesMasterConf, KubernetesServiceConf, KubernetesStorageConf, KubernetesWorkerConf,
-    MasterConf, RaftPeer, StorageType, WorkerConf, WorkerDataDir, S3GatewayConf, parse_size_string,
+    parse_size_string, ClientConf, ClusterConf, FuseConf, InetAddr, JobConf, JournalConf,
+    KubernetesConf, KubernetesMasterConf, KubernetesServiceConf, KubernetesStorageConf,
+    KubernetesWorkerConf, MasterConf, RaftPeer, S3GatewayConf, StorageType, WorkerConf,
+    WorkerDataDir,
 };
 
 // Re-export Kubernetes configuration types

@@ -156,7 +156,7 @@ fn test_worker_storage_types_parsing() {
     // Verify each storage type can be parsed
     for data_dir_str in &conf.worker.data_dir {
         use curvine_kube::domain::config::WorkerDataDir;
-        let result = WorkerDataDir::from_str(data_dir_str);
+        let result = WorkerDataDir::parse_data_dir(data_dir_str);
         assert!(result.is_ok(), "Failed to parse: {}", data_dir_str);
     }
 }
@@ -167,7 +167,7 @@ fn test_worker_mem_storage() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[MEM:10GB]/data/mem").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[MEM:10GB]/data/mem").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Mem);
     assert_eq!(data_dir.capacity, 10 * 1024 * 1024 * 1024); // 10GB in bytes
 }
@@ -178,7 +178,7 @@ fn test_worker_ssd_storage() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[SSD:100GB]/data/ssd").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[SSD:100GB]/data/ssd").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Ssd);
     assert_eq!(data_dir.capacity, 100 * 1024 * 1024 * 1024); // 100GB in bytes
 }
@@ -189,7 +189,7 @@ fn test_worker_hdd_storage() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[HDD:500GB]/data/hdd").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[HDD:500GB]/data/hdd").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Hdd);
     assert_eq!(data_dir.capacity, 500 * 1024 * 1024 * 1024); // 500GB in bytes
 }
@@ -200,7 +200,7 @@ fn test_worker_disk_storage_no_slash() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[DISK]testing/data").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[DISK]testing/data").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Disk);
 }
 
@@ -210,7 +210,7 @@ fn test_worker_storage_without_capacity() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[SSD]/data/ssd").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[SSD]/data/ssd").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Ssd);
     assert_eq!(data_dir.capacity, 0); // No capacity specified
 }
@@ -221,7 +221,7 @@ fn test_worker_default_storage_type() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("/data/default").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("/data/default").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Disk);
 }
 
@@ -581,7 +581,7 @@ fn test_worker_ufs_storage() {
     use curvine_kube::domain::config::StorageType;
     use curvine_kube::domain::config::WorkerDataDir;
 
-    let data_dir = WorkerDataDir::from_str("[UFS:200GB]/data/ufs").unwrap();
+    let data_dir = WorkerDataDir::parse_data_dir("[UFS:200GB]/data/ufs").unwrap();
     assert_eq!(data_dir.storage_type, StorageType::Ufs);
     assert_eq!(data_dir.capacity, 200 * 1024 * 1024 * 1024); // 200GB in bytes
 }

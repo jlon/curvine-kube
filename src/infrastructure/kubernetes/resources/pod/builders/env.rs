@@ -17,7 +17,9 @@
 //! This module provides a unified way to build environment variables
 //! for different Curvine components, eliminating code duplication.
 
-use crate::infrastructure::constants::{APP_HOME, CURVINE_CONF_FILE, CURVINE_HOME, ORPC_BIND_HOSTNAME};
+use crate::infrastructure::constants::{
+    APP_HOME, CURVINE_CONF_FILE, CURVINE_HOME, ORPC_BIND_HOSTNAME,
+};
 use k8s_openapi::api::core::v1::{EnvVar, EnvVarSource, ObjectFieldSelector};
 use std::collections::HashMap;
 

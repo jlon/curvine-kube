@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::domain::config::kubernetes::KubernetesConfig;
 use crate::domain::config::curvine::{parse_size_string, ClusterConf, StorageType, WorkerDataDir};
+use crate::domain::config::kubernetes::KubernetesConfig;
 use crate::shared::error::KubeError;
 use kube::Client;
 
@@ -92,7 +92,7 @@ impl KubernetesValidator {
         };
 
         for data_dir_str in cluster_conf.worker.data_dir.iter() {
-            let data_dir = WorkerDataDir::from_str(data_dir_str)
+            let data_dir = WorkerDataDir::parse_data_dir(data_dir_str)
                 .map_err(|e| KubeError::ConfigError(format!("Invalid data_dir format: {}", e)))?;
 
             if data_dir.storage_type == StorageType::Mem

@@ -12,14 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::infrastructure::kubernetes::resources::pod::{
-    merge_pod_with_template, PodBuilder, EnvironmentBuilder, LifecycleBuilder,
-};
 use crate::domain::config::kubernetes::KubernetesConfig;
-use crate::infrastructure::constants::*;
 use crate::domain::config::{ClusterConf, StorageType, WorkerDataDir};
+use crate::infrastructure::constants::*;
+use crate::infrastructure::kubernetes::resources::pod::template_utils::{
+    format_bytes, load_pod_from_template_file,
+};
+use crate::infrastructure::kubernetes::resources::pod::{
+    merge_pod_with_template, EnvironmentBuilder, LifecycleBuilder, PodBuilder,
+};
 use crate::shared::error::Result;
-use crate::infrastructure::kubernetes::resources::pod::template_utils::{format_bytes, load_pod_from_template_file};
 use k8s_openapi::api::apps::v1::{StatefulSet, StatefulSetSpec};
 use k8s_openapi::api::core::v1::{Container, PersistentVolumeClaim, PodSpec, PodTemplateSpec};
 use k8s_openapi::apimachinery::pkg::api::resource::Quantity;
@@ -259,7 +261,7 @@ impl WorkerBuilder {
         let mut data_dirs = Vec::new();
 
         for (index, data_dir_str) in self.cluster_conf.worker.data_dir.iter().enumerate() {
-            let data_dir = WorkerDataDir::from_str(data_dir_str).map_err(|e| {
+            let data_dir = WorkerDataDir::parse_data_dir(data_dir_str).map_err(|e| {
                 crate::shared::error::KubeError::ConfigError(format!(
                     "Invalid data_dir format '{}': {}",
                     data_dir_str, e

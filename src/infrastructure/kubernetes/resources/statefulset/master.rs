@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::infrastructure::kubernetes::resources::pod::{
-    merge_pod_with_template, PodBuilder, EnvironmentBuilder, LifecycleBuilder,
-};
 use crate::domain::config::kubernetes::KubernetesConfig;
-use crate::infrastructure::constants::*;
 use crate::domain::config::ClusterConf;
-use crate::shared::error::Result;
+use crate::infrastructure::constants::*;
 use crate::infrastructure::kubernetes::resources::pod::template_utils::load_pod_from_template_file;
+use crate::infrastructure::kubernetes::resources::pod::{
+    merge_pod_with_template, EnvironmentBuilder, LifecycleBuilder, PodBuilder,
+};
+use crate::shared::error::Result;
 use k8s_openapi::api::apps::v1::{StatefulSet, StatefulSetSpec};
 use k8s_openapi::api::core::v1::PersistentVolumeClaim;
 use k8s_openapi::api::core::v1::{Container, PodSpec, PodTemplateSpec};

@@ -213,7 +213,7 @@ impl KubernetesConfig {
             ));
         }
 
-        if self.master.replicas % 2 == 0 {
+        if self.master.replicas.is_multiple_of(2) {
             return Err(KubeError::ConfigError(
                 "master.replicas should be odd for Raft (recommended: 3, 5, 7)".to_string(),
             ));

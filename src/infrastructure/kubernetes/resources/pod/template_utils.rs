@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::shared::error::KubeError;
 use crate::infrastructure::kubernetes::resources::pod::template::CurvinePod;
+use crate::shared::error::KubeError;
 use k8s_openapi::api::core::v1::Pod;
 use std::path::PathBuf;
 
@@ -56,7 +56,7 @@ pub fn load_pod_from_template_file(
     // Validate that the main container exists in the template
     if let Some(ref spec) = pod.spec {
         let container_names: Vec<&str> = spec.containers.iter().map(|c| c.name.as_str()).collect();
-        
+
         if !container_names.contains(&main_container_name) {
             return Err(KubeError::ValidationError(format!(
                 "\n Container name mismatch in Pod template\n\

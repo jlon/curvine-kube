@@ -63,10 +63,10 @@ impl ClusterConf {
     pub fn from<T: AsRef<str>>(path: T) -> anyhow::Result<Self> {
         let content = read_to_string(path.as_ref())
             .map_err(|e| anyhow::anyhow!("Failed to read config file {}: {}", path.as_ref(), e))?;
-        
-        let conf: Self = toml::from_str(&content)
-            .map_err(|e| anyhow::anyhow!("Failed to parse TOML: {}", e))?;
-        
+
+        let conf: Self =
+            toml::from_str(&content).map_err(|e| anyhow::anyhow!("Failed to parse TOML: {}", e))?;
+
         Ok(conf)
     }
 }
@@ -140,7 +140,7 @@ pub struct WorkerDataDir {
 }
 
 impl WorkerDataDir {
-    pub fn from_str(s: &str) -> anyhow::Result<Self> {
+    pub fn parse_data_dir(s: &str) -> anyhow::Result<Self> {
         use regex::Regex;
 
         let re = Regex::new(r"^\[([\w:]*)\](.+)$")?;
@@ -245,30 +245,30 @@ impl Default for MasterConf {
             io_timeout: "10m".to_string(),
             io_close_idle: true,
             meta_dir: "/tmp/curvine/master/meta".to_string(),
-            meta_disable_wal: true,  // Fixed: original uses true
-            meta_compression_type: "none".to_string(),  // Fixed: original uses "none"
-            meta_db_write_buffer_size: "0".to_string(),  // Fixed: original uses "0"
+            meta_disable_wal: true, // Fixed: original uses true
+            meta_compression_type: "none".to_string(), // Fixed: original uses "none"
+            meta_db_write_buffer_size: "0".to_string(), // Fixed: original uses "0"
             meta_write_buffer_size: "64MB".to_string(),
-            min_block_size: 1024 * 1024,  // Fixed: original uses 1MB
-            max_block_size: 100 * 1024 * 1024 * 1024,  // Fixed: original uses 100GB
+            min_block_size: 1024 * 1024, // Fixed: original uses 1MB
+            max_block_size: 100 * 1024 * 1024 * 1024, // Fixed: original uses 100GB
             min_replication: 1,
-            max_replication: 100,  // Fixed: original uses 100
-            max_path_len: 8000,  // Fixed: original uses 8000
+            max_replication: 100, // Fixed: original uses 100
+            max_path_len: 8000,   // Fixed: original uses 8000
             max_path_depth: 1000,
             retry_cache_enable: true,
             retry_cache_size: 100000,
             retry_cache_ttl: "10m".to_string(),
-            block_report_limit: 1000,  // Fixed: original uses 1000
-            worker_policy: "local".to_string(),  // Fixed: original uses "local" (but "robin" is also valid)
-            executor_threads: 10,  // Fixed: original uses 10
+            block_report_limit: 1000,           // Fixed: original uses 1000
+            worker_policy: "local".to_string(), // Fixed: original uses "local" (but "robin" is also valid)
+            executor_threads: 10,               // Fixed: original uses 10
             executor_channel_size: 1000,
-            heartbeat_interval: "3s".to_string(),  // Fixed: original uses "3s"
-            worker_check_interval: "10s".to_string(),  // Fixed: original uses "10s"
-            worker_blacklist_interval: "30s".to_string(),  // Fixed: original uses "30s"
-            worker_lost_interval: "10m".to_string(),  // Fixed: original uses "10m"
-            audit_logging_enabled: true,  // Fixed: original uses true
-            block_replication_enabled: false,  // Fixed: original uses false
-            block_replication_concurrency_limit: 1000,  // Fixed: original uses 1000
+            heartbeat_interval: "3s".to_string(), // Fixed: original uses "3s"
+            worker_check_interval: "10s".to_string(), // Fixed: original uses "10s"
+            worker_blacklist_interval: "30s".to_string(), // Fixed: original uses "30s"
+            worker_lost_interval: "10m".to_string(), // Fixed: original uses "10m"
+            audit_logging_enabled: true,          // Fixed: original uses true
+            block_replication_enabled: false,     // Fixed: original uses false
+            block_replication_concurrency_limit: 1000, // Fixed: original uses 1000
             ttl_checker_retry_attempts: 3,
             ttl_checker_interval: "1h".to_string(),
             ttl_bucket_interval: "1h".to_string(),
@@ -327,37 +327,37 @@ impl Default for JournalConf {
     fn default() -> Self {
         Self {
             enable: true,
-            group_name: "raft-group".to_string(),  // Fixed: original uses "raft-group"
+            group_name: "raft-group".to_string(), // Fixed: original uses "raft-group"
             hostname: "localhost".to_string(),
             rpc_port: 8996,
-            io_threads: 8,  // Fixed: original uses 8
-            worker_threads: 8,  // Fixed: original uses 8
-            message_size: 200,  // Fixed: original uses 200
+            io_threads: 8,     // Fixed: original uses 8
+            worker_threads: 8, // Fixed: original uses 8
+            message_size: 200, // Fixed: original uses 200
             journal_addrs: vec![],
             journal_dir: "/tmp/curvine/master/journal".to_string(),
             writer_debug: false,
-            writer_channel_size: 0,  // Fixed: original uses 0
-            writer_flush_batch_size: 1000,  // Fixed: original uses 1000
+            writer_channel_size: 0,        // Fixed: original uses 0
+            writer_flush_batch_size: 1000, // Fixed: original uses 1000
             writer_flush_batch_ms: 100,
-            snapshot_interval: "6h".to_string(),  // Fixed: original uses "6h"
+            snapshot_interval: "6h".to_string(), // Fixed: original uses "6h"
             snapshot_entries: 100000,
             snapshot_read_chunk_size: 1024 * 1024,
             conn_retry_max_duration_ms: 0,  // Fixed: original uses 0
-            conn_retry_min_sleep_ms: 10000,  // Fixed: original uses 10000
-            conn_retry_max_sleep_ms: 10000,  // Fixed: original uses 10000
+            conn_retry_min_sleep_ms: 10000, // Fixed: original uses 10000
+            conn_retry_max_sleep_ms: 10000, // Fixed: original uses 10000
             rpc_close_idle: false,
-            rpc_retry_max_duration_ms: 60000,  // Fixed: original uses 60000
-            rpc_retry_min_sleep_ms: 20000,  // Fixed: original uses 20000
-            rpc_retry_max_sleep_ms: 20000,  // Fixed: original uses 20000
+            rpc_retry_max_duration_ms: 60000, // Fixed: original uses 60000
+            rpc_retry_min_sleep_ms: 20000,    // Fixed: original uses 20000
+            rpc_retry_max_sleep_ms: 20000,    // Fixed: original uses 20000
             conn_timeout_ms: 30000,
             io_timeout_ms: 60000,
             conn_size: 1,
             raft_poll_interval_ms: 100,
-            raft_tick_interval_ms: 1000,  // Fixed: original uses 1000
-            raft_election_tick: 10,  // Fixed: original uses 10
-            raft_heartbeat_tick: 3,  // Fixed: original uses 3
-            raft_min_election_ticks: 10,  // Fixed: original uses 10
-            raft_max_election_ticks: 30,  // Fixed: original uses 30
+            raft_tick_interval_ms: 1000, // Fixed: original uses 1000
+            raft_election_tick: 10,      // Fixed: original uses 10
+            raft_heartbeat_tick: 3,      // Fixed: original uses 3
+            raft_min_election_ticks: 10, // Fixed: original uses 10
+            raft_max_election_ticks: 30, // Fixed: original uses 30
             raft_check_quorum: true,
             raft_max_size_per_msg: 1024 * 1024,
             raft_max_inflight_msgs: 256,
@@ -404,8 +404,8 @@ impl Default for WorkerConf {
             io_threads: 4,
             worker_threads: 4,
             io_timeout: "10m".to_string(),
-            io_close_idle: false,  // Fixed: original uses false
-            data_dir: vec![],  // Fixed: original uses empty vec (will be set by user config)
+            io_close_idle: false, // Fixed: original uses false
+            data_dir: vec![],     // Fixed: original uses empty vec (will be set by user config)
             tier_alias: HashMap::new(),
             enable_tiered_store: false,
             tiered_store_levels: vec![],
@@ -491,7 +491,7 @@ pub struct KubernetesServiceConf {
     pub external_ips: Vec<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(default)]
 pub struct KubernetesStorageConf {
     pub storage_class: String,
@@ -554,25 +554,13 @@ impl Default for KubernetesServiceConf {
     }
 }
 
-impl Default for KubernetesStorageConf {
-    fn default() -> Self {
-        Self {
-            storage_class: String::new(),
-            master_storage_class: None,
-            worker_storage_class: None,
-            master_size: None,
-            worker_size: None,
-        }
-    }
-}
-
 impl Default for ClientConf {
     fn default() -> Self {
         Self {
             hostname: "localhost".to_string(),
             master_addrs: vec![],
-            block_size: 0,  // Fixed: original uses 0 (calculated from block_size_str)
-            block_size_str: "128MB".to_string(),  // Fixed: original uses "128MB"
+            block_size: 0, // Fixed: original uses 0 (calculated from block_size_str)
+            block_size_str: "128MB".to_string(), // Fixed: original uses "128MB"
             write_type: "cache_through".to_string(),
             read_type: "cache".to_string(),
             io_retry_max_duration_ms: 30000,

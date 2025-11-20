@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::shared::error::Result;
 use crate::infrastructure::kubernetes::resources::pod::template::CurvinePod;
+use crate::shared::error::Result;
 use k8s_openapi::api::core::v1::{Pod, Volume, VolumeMount};
 use std::collections::{BTreeMap, HashSet};
 

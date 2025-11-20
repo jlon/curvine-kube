@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::domain::cluster::validator::KubernetesValidator;
+use crate::domain::config::kubernetes::KubernetesConfig;
+use crate::domain::config::ClusterConf;
+use crate::infrastructure::kubernetes::client::{CurvineKubeClient, CurvineKubeClientImpl};
 use crate::infrastructure::kubernetes::resources::{
     ConfigMapBuilder, HeadlessServiceBuilder, MasterBuilder, ServiceBuilder, WorkerBuilder,
 };
-use crate::infrastructure::kubernetes::client::{CurvineKubeClient, CurvineKubeClientImpl};
-use crate::domain::config::kubernetes::KubernetesConfig;
-use crate::domain::config::ClusterConf;
 use crate::shared::error::KubeError;
-use crate::domain::cluster::validator::KubernetesValidator;
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -284,7 +284,7 @@ impl CurvineClusterDescriptor {
             if waited >= FAILURE_DETECTION_WAIT {
                 let mut labels = std::collections::HashMap::new();
                 labels.insert("app".to_string(), cluster_id.to_string());
-                
+
                 if let Ok(pods) = self.client.get_pods_with_labels(&labels).await {
                     for pod in pods {
                         if let Some(status) = &pod.status {
@@ -292,9 +292,14 @@ impl CurvineClusterDescriptor {
                             if let Some(container_statuses) = &status.container_statuses {
                                 for cs in container_statuses {
                                     // Check if container is in waiting state with error
-                                    if let Some(ref waiting) = cs.state.as_ref().and_then(|s| s.waiting.as_ref()) {
-                                        if let Some(ref reason) = waiting.reason {
-                                            if reason == "CrashLoopBackOff" || reason == "ImagePullBackOff" || reason == "ErrImagePull" {
+                                    if let Some(waiting) =
+                                        cs.state.as_ref().and_then(|s| s.waiting.as_ref())
+                                    {
+                                        if let Some(reason) = &waiting.reason {
+                                            if reason == "CrashLoopBackOff"
+                                                || reason == "ImagePullBackOff"
+                                                || reason == "ErrImagePull"
+                                            {
                                                 return Err(KubeError::ValidationError(format!(
                                                     "Pod {} is in {} state. Check pod logs: kubectl logs -n {} {}",
                                                     pod.metadata.name.as_deref().unwrap_or("unknown"),
@@ -305,7 +310,7 @@ impl CurvineClusterDescriptor {
                                             }
                                         }
                                     }
-                                    
+
                                     // Check restart count - if too high, likely failing
                                     if cs.restart_count > 5 {
                                         return Err(KubeError::ValidationError(format!(
@@ -318,7 +323,7 @@ impl CurvineClusterDescriptor {
                                     }
                                 }
                             }
-                            
+
                             // Check pod phase
                             if let Some(phase) = &status.phase {
                                 if phase == "Failed" {
@@ -377,7 +382,7 @@ impl CurvineClusterDescriptor {
 
         Err(KubeError::Timeout(format!(
             "Cluster {} did not become ready within {} seconds (Master ready: {}/{}, Worker ready: {}/{})",
-            cluster_id, MAX_WAIT_SECONDS, last_master_ready, 
+            cluster_id, MAX_WAIT_SECONDS, last_master_ready,
             if let Ok(ss) = self.client.get_statefulset(&format!("{}-master", cluster_id)).await {
                 ss.spec.as_ref().and_then(|s| s.replicas).unwrap_or(0) as u32
             } else {
