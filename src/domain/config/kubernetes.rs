@@ -154,23 +154,28 @@ impl KubernetesConfigBuilder {
             })
             .collect();
 
-        // Update journal.journal_addrs with RaftPeer
+        // Update journal.journal_addrs with RaftPeer (dynamically generated in k8s)
         use crate::domain::config::curvine::RaftPeer;
-        cluster_side_conf.journal.journal_addrs = master_addrs
-            .iter()
-            .enumerate()
-            .map(|(i, hostname)| RaftPeer {
-                id: (i + 1) as u64,
-                hostname: hostname.clone(),
-                port: cluster_side_conf.journal.rpc_port,
-            })
-            .collect();
+        cluster_side_conf.journal.journal_addrs = Some(
+            master_addrs
+                .iter()
+                .enumerate()
+                .map(|(i, hostname)| RaftPeer {
+                    id: (i + 1) as u64,
+                    hostname: hostname.clone(),
+                    port: cluster_side_conf.journal.rpc_port,
+                })
+                .collect(),
+        );
 
+        // Update client.master_addrs (dynamically generated in k8s)
         use crate::domain::config::curvine::InetAddr;
-        cluster_side_conf.client.master_addrs = master_addrs
-            .iter()
-            .map(|hostname| InetAddr::new(hostname.clone(), cluster_side_conf.master.rpc_port))
-            .collect();
+        cluster_side_conf.client.master_addrs = Some(
+            master_addrs
+                .iter()
+                .map(|hostname| InetAddr::new(hostname.clone(), cluster_side_conf.master.rpc_port))
+                .collect(),
+        );
 
         cluster_side_conf.master.meta_dir = Self::resolve_path(&self.cluster_conf.master.meta_dir);
         cluster_side_conf.journal.journal_dir =

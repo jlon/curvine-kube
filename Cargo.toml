@@ -50,6 +50,11 @@ tracing-subscriber = "0.3.19"
 async-trait = "0.1.76"
 regex = "1.9.4"
 
+# TUI and Display (新增)
+comfy-table = "7.1"
+colored = "2.1"
+chrono = "0.4"
+
 [dev-dependencies]
 tempfile = "3.21.0"
 

@@ -1,0 +1,61 @@
+# Curvine Test Cluster Configuration
+
+[client]
+master_addrs = ["localhost:8995"]
+hostname = "localhost"
+io_threads = 16
+worker_threads = 16
+replicas = 1
+block_size = "128MB"
+write_chunk_size = "128KB"
+write_chunk_num = 8
+read_chunk_size = "128KB"
+read_chunk_num = 8
+conn_timeout_ms = 30000
+rpc_timeout_ms = 120000
+data_timeout_ms = 300000
+master_conn_pool_size = 1
+
+[client.kubernetes]
+namespace = "default"
+cluster_id = "test-cli"
+cluster_domain = "cluster.local"
+image_pull_policy = "IfNotPresent"
+
+[client.kubernetes.master]
+replicas = 1
+image = "curvine:latest"
+graceful_shutdown = true
+
+[client.kubernetes.worker]
+replicas = 2
+image = "curvine:latest"
+use_statefulset = true
+graceful_shutdown = true
+host_network = false
+init_container = false
+
+[client.kubernetes.storage]
+storage_class = "standard"
+size = "10Gi"
+
+[client.kubernetes.service]
+service_type = "ClusterIP"
+annotations = {}
+external_ips = []
+
+[master]
+rpc_host = "0.0.0.0"
+rpc_port = 8995
+web_port = 9000
+meta_dir = "/opt/curvine/data/meta"
+
+[journal]
+rpc_port = 8996
+journal_dir = "/opt/curvine/data/journal"
+
+[worker]
+rpc_host = "0.0.0.0"
+rpc_port = 8997
+web_port = 9001
+worker_data_dir = "[SSD:100GB]/data/cache"

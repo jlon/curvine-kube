@@ -431,17 +431,13 @@ impl CurvineClusterDescriptor {
 
         match self
             .client
-            .get_deployment(&format!("{}-worker", cluster_id))
+            .get_statefulset(&format!("{}-worker", cluster_id))
             .await
         {
-            Ok(deployment) => {
-                let name = deployment.metadata.name.clone().unwrap_or_default();
-                let replicas = deployment
-                    .spec
-                    .as_ref()
-                    .and_then(|s| s.replicas)
-                    .unwrap_or(0) as u32;
-                let ready_replicas = deployment
+            Ok(ss) => {
+                let name = ss.metadata.name.clone().unwrap_or_default();
+                let replicas = ss.spec.as_ref().and_then(|s| s.replicas).unwrap_or(0) as u32;
+                let ready_replicas = ss
                     .status
                     .as_ref()
                     .and_then(|s| s.ready_replicas)

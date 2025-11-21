@@ -1,6 +1,7 @@
 // CLI module for curvine-kube
 
 pub mod commands;
+pub mod display;
 pub mod k8s;
 
 pub use commands::CliArgs;

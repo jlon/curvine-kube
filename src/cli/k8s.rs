@@ -159,19 +159,27 @@ pub struct ListCommand {
 #[derive(Parser, Debug)]
 pub struct StatusCommand {
     /// Cluster ID
-    #[arg(required = true)]
-    pub cluster_id: String,
+    #[arg(long, short = 'c')]
+    pub cluster_id: Option<String>,
 
     /// Kubernetes namespace
     #[arg(long, short = 'n', default_value = "default")]
     pub namespace: String,
+
+    /// Kubeconfig file path
+    #[arg(long)]
+    pub kubeconfig: Option<String>,
+
+    /// Kubernetes context
+    #[arg(long)]
+    pub context: Option<String>,
 }
 
 #[derive(Parser, Debug)]
 pub struct DeleteCommand {
     /// Cluster ID
-    #[arg(required = true)]
-    pub cluster_id: String,
+    #[arg(long, short = 'c')]
+    pub cluster_id: Option<String>,
 
     /// Kubernetes namespace
     #[arg(long, short = 'n', default_value = "default")]
@@ -180,20 +188,28 @@ pub struct DeleteCommand {
     /// Delete PVCs (persistent volumes)
     #[arg(long)]
     pub delete_pvcs: bool,
+
+    /// Kubeconfig file path
+    #[arg(long)]
+    pub kubeconfig: Option<String>,
+
+    /// Kubernetes context
+    #[arg(long)]
+    pub context: Option<String>,
 }
 
 impl DeployCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
-        // Load cluster configuration - required
+        // Load cluster configuration - optional, use defaults if not provided
         let cluster_conf = if let Some(ref config_path) = self.config_file {
             ClusterConf::from(config_path)?
-        } else {
-            // Try to use CURVINE_CONF_FILE environment variable
-            let env_path = std::env::var("CURVINE_CONF_FILE")
-                .map_err(|_| anyhow::anyhow!(
-                    "Configuration file is required. Please specify --config-file or set CURVINE_CONF_FILE environment variable"
-                ))?;
+        } else if let Ok(env_path) = std::env::var("CURVINE_CONF_FILE") {
+            // Try to use CURVINE_CONF_FILE environment variable if set
             ClusterConf::from(&env_path)?
+        } else {
+            // Use default configuration if no config file is provided
+            println!("ℹ️  No configuration file specified, using default settings");
+            ClusterConf::default()
         };
         // Parse dynamic configurations
         let dynamic_configs = if !self.properties.is_empty() {
@@ -670,46 +686,60 @@ impl UpdateCommand {
 
 impl StatusCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
-        let descriptor = CurvineClusterDescriptor::new(self.namespace.clone())
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to create cluster descriptor: {}", e))?;
+        use crate::cli::display::TableRenderer;
+
+        let cluster_id = self
+            .cluster_id
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("cluster_id is required (use -c/--cluster-id)"))?;
+
+        let descriptor = CurvineClusterDescriptor::new_with_config(
+            self.namespace.clone(),
+            self.kubeconfig.clone(),
+            self.context.clone(),
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to create cluster descriptor: {}", e))?;
 
         let status = descriptor
-            .get_cluster_status(&self.cluster_id)
+            .get_cluster_status(cluster_id)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to get cluster status: {}", e))?;
 
-        println!("Cluster Status: {}", status.cluster_id);
-        println!("---");
+        // Extract status information
+        let master_name = status.master.as_ref().map(|m| m.name.as_str());
+        let master_ready = status.master.as_ref().map(|m| m.ready_replicas).unwrap_or(0);
+        let master_replicas = status.master.as_ref().map(|m| m.replicas).unwrap_or(0);
 
-        if let Some(ref master) = status.master {
-            println!("Master StatefulSet: {}", master.name);
-            println!("  Replicas: {}/{}", master.ready_replicas, master.replicas);
-        } else {
-            println!("Master StatefulSet: Not found");
-        }
+        let worker_name = status.worker.as_ref().map(|w| w.name.as_str());
+        let worker_ready = status.worker.as_ref().map(|w| w.ready_replicas).unwrap_or(0);
+        let worker_replicas = status.worker.as_ref().map(|w| w.replicas).unwrap_or(0);
 
-        if let Some(ref worker) = status.worker {
-            println!("Worker StatefulSet: {}", worker.name);
-            println!("  Replicas: {}/{}", worker.ready_replicas, worker.replicas);
-        } else {
-            println!("Worker StatefulSet: Not found");
-        }
+        let service_name = status.service.as_ref().map(|s| s.name.as_str());
+        let cluster_ip = status
+            .service
+            .as_ref()
+            .and_then(|s| s.cluster_ip.as_deref());
 
-        if let Some(ref service) = status.service {
-            println!("Service: {}", service.name);
-            if let Some(ref cluster_ip) = service.cluster_ip {
-                println!("  Cluster IP: {}", cluster_ip);
-            }
-        } else {
-            println!("Service: Not found");
-        }
+        let configmap_name = status.configmap.as_ref().map(|c| c.name.as_str());
 
-        if let Some(ref configmap) = status.configmap {
-            println!("ConfigMap: {}", configmap.name);
-        } else {
-            println!("ConfigMap: Not found");
-        }
+        // Render using new table renderer
+        let renderer = TableRenderer::new();
+        let output = renderer.render_cluster_status(
+            &status.cluster_id,
+            &self.namespace,
+            master_name,
+            master_ready,
+            master_replicas,
+            worker_name,
+            worker_ready,
+            worker_replicas,
+            service_name,
+            cluster_ip,
+            configmap_name,
+        );
+
+        println!("{}", output);
 
         Ok(())
     }
@@ -717,22 +747,33 @@ impl StatusCommand {
 
 impl DeleteCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
-        let descriptor = CurvineClusterDescriptor::new(self.namespace.clone())
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to create cluster descriptor: {}", e))?;
+        let cluster_id = self
+            .cluster_id
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("cluster_id is required (use -c/--cluster-id)"))?;
+
+        let descriptor = CurvineClusterDescriptor::new_with_config(
+            self.namespace.clone(),
+            self.kubeconfig.clone(),
+            self.context.clone(),
+        )
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to create cluster descriptor: {}", e))?;
 
         descriptor
-            .delete_cluster(&self.cluster_id, self.delete_pvcs)
+            .delete_cluster(cluster_id, self.delete_pvcs)
             .await
             .map_err(|e| anyhow::anyhow!("Failed to delete cluster: {}", e))?;
 
-        println!("Cluster {} deleted successfully!", self.cluster_id);
+        println!("Cluster {} deleted successfully!", cluster_id);
         Ok(())
     }
 }
 
 impl ListCommand {
     pub async fn execute(&self) -> anyhow::Result<()> {
+        use crate::cli::display::{table::ClusterInfo, TableRenderer};
+
         let namespaces: Vec<String> = if let Some(ref ns) = self.namespace {
             vec![ns.clone()]
         } else {
@@ -761,22 +802,23 @@ impl ListCommand {
             return Ok(());
         }
 
-        println!("Curvine Clusters:");
-        println!(
-            "{:<20} {:<15} {:<20} {:<20}",
-            "CLUSTER", "NAMESPACE", "MASTER (READY/TOTAL)", "WORKER (READY/TOTAL)"
-        );
-        println!("{:-<75}", "");
+        // Convert to ClusterInfo for rendering
+        let cluster_infos: Vec<ClusterInfo> = all_clusters
+            .iter()
+            .map(|c| ClusterInfo {
+                cluster_id: c.cluster_id.clone(),
+                namespace: c.namespace.clone(),
+                master_ready: c.master_ready,
+                master_replicas: c.master_replicas,
+                worker_ready: c.worker_ready,
+                worker_replicas: c.worker_replicas,
+            })
+            .collect();
 
-        for cluster in all_clusters {
-            println!(
-                "{:<20} {:<15} {:<20} {:<20}",
-                cluster.cluster_id,
-                cluster.namespace,
-                format!("{}/{}", cluster.master_ready, cluster.master_replicas),
-                format!("{}/{}", cluster.worker_ready, cluster.worker_replicas),
-            );
-        }
+        // Render using new table renderer
+        let renderer = TableRenderer::new();
+        let output = renderer.render_clusters_list(&cluster_infos);
+        println!("{}", output);
 
         Ok(())
     }

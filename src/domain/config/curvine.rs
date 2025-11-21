@@ -285,7 +285,9 @@ pub struct JournalConf {
     pub io_threads: usize,
     pub worker_threads: usize,
     pub message_size: usize,
-    pub journal_addrs: Vec<RaftPeer>,
+    /// Journal addresses - optional in k8s context (dynamically generated)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub journal_addrs: Option<Vec<RaftPeer>>,
     pub journal_dir: String,
     pub writer_debug: bool,
     pub writer_channel_size: usize,
@@ -328,7 +330,7 @@ impl Default for JournalConf {
             io_threads: 8,     // Fixed: original uses 8
             worker_threads: 8, // Fixed: original uses 8
             message_size: 200, // Fixed: original uses 200
-            journal_addrs: vec![],
+            journal_addrs: None, // Optional in k8s context
             journal_dir: "/tmp/curvine/master/journal".to_string(),
             writer_debug: false,
             writer_channel_size: 0,        // Fixed: original uses 0
@@ -424,7 +426,9 @@ impl Default for WorkerConf {
 #[serde(default)]
 pub struct ClientConf {
     pub hostname: String,
-    pub master_addrs: Vec<InetAddr>,
+    /// Master addresses - optional in k8s context (dynamically generated)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub master_addrs: Option<Vec<InetAddr>>,
     #[serde(skip)]
     pub block_size: i64,
     #[serde(alias = "block_size")]
@@ -553,7 +557,7 @@ impl Default for ClientConf {
     fn default() -> Self {
         Self {
             hostname: "localhost".to_string(),
-            master_addrs: vec![],
+            master_addrs: None, // Optional in k8s context
             block_size: 0, // Fixed: original uses 0 (calculated from block_size_str)
             block_size_str: "128MB".to_string(), // Fixed: original uses "128MB"
             write_type: "cache_through".to_string(),
@@ -571,9 +575,12 @@ impl Default for ClientConf {
 
 impl ClientConf {
     pub fn init(&mut self) -> anyhow::Result<()> {
-        // Simplified init, just validate addresses exist
-        if self.master_addrs.is_empty() {
-            anyhow::bail!("client.master_addrs cannot be empty");
+        // In k8s context, master_addrs are dynamically generated, so validation is skipped
+        // Only validate if master_addrs is explicitly provided and empty
+        if let Some(ref addrs) = self.master_addrs {
+            if addrs.is_empty() {
+                anyhow::bail!("client.master_addrs cannot be empty when provided");
+            }
         }
         Ok(())
     }
